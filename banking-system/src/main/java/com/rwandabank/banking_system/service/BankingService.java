@@ -2,13 +2,16 @@ package com.rwandabank.banking_system.service;
 
 import com.rwandabank.banking_system.entity.Banking;
 import com.rwandabank.banking_system.entity.Customer;
+import com.rwandabank.banking_system.entity.Message;
 import com.rwandabank.banking_system.repository.BankingRepository;
+import com.rwandabank.banking_system.repository.MessageRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.rwandabank.banking_system.repository.CustomerRepository;
 
 
+import javax.swing.text.DefaultEditorKit;
 import java.time.LocalDateTime;
 
 @Service
@@ -23,6 +26,21 @@ public class BankingService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private MessageRepository messageRepository;
+
+
+
+
+    private void saveMessage(Customer customer, String messageText){
+        Message message = new Message();
+        message.setCustomer(customer);
+        message.setMessage(messageText);
+        message.setDateTime(LocalDateTime.now());
+        messageRepository.save(message);
+    }
+
 
     public Customer registerCustomer(Customer customer){
         customer.setBalance(0.0);
@@ -58,6 +76,8 @@ public class BankingService {
                 customer.getAccount() != null? customer.getAccount():"N/A",
                 LocalDateTime.now());
         emailService.sendEmail(customer.getEmail(), "Saving Transaction Confirmation", messageText);
+
+        saveMessage(customer, messageText);
 
         return banking;
 
@@ -95,6 +115,8 @@ public class BankingService {
                 customer.getAccount() != null? customer.getAccount():"N/A",
                 LocalDateTime.now());
         emailService.sendEmail(customer.getEmail(), "Saving Transaction Confirmation", messageText);
+
+        saveMessage(customer, messageText);
 
         return banking;
     }
@@ -145,6 +167,11 @@ public class BankingService {
                 LocalDateTime.now());
         emailService.sendEmail(toCustomer.getEmail(), "Transfer Receipt Confirmation", recipientMessage);
 
+        saveMessage(fromCustomer, senderMessage);
+        saveMessage(toCustomer, recipientMessage);
+
         return banking;
+
+
     }
 }
